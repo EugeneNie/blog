@@ -15,7 +15,23 @@ git commit -m "新增文章：xxx"
 git push
 ```
 
-也可以直接运行 `.\publish.ps1`（会先本地构建一次做校验，再自动提交推送）。
+### 三种发布方式
+
+| 方式 | 你要做什么 | 什么时候上线 |
+| --- | --- | --- |
+| 自动（默认已开启） | **什么都不用做**，改完保存即可 | 文件停止修改 3 分钟后自动提交，约 1 分钟后上线 |
+| 立即发布 | 运行 `.\publish.ps1` | 立刻提交推送，约 1 分钟上线 |
+| 手动 | `git add . && git commit -m "..." && git push` | 同上 |
+
+自动发布的原理：Windows 计划任务 `BlogAutoPublish` 每 5 分钟运行一次 `auto-publish.ps1`，检测到博客有改动、且本地构建通过时，自动 `git commit + push`。带上这些保护：文件刚改过会再等一轮（避免提交写了一半的文章）、源文件超过 10MB 不自动提交、本地构建失败不推送。
+
+日志在 `%LOCALAPPDATA%\blog-auto-publish.log`；不想用自动发布了就执行：
+
+```powershell
+Unregister-ScheduledTask -TaskName BlogAutoPublish -Confirm:$false
+```
+
+注意：自动发布需要**这台电脑开机并登录**；电脑关着的时候改动不会被推上去。
 
 ## 自动化是怎么工作的
 
