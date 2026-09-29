@@ -1,11 +1,15 @@
 baseURL = "https://eugenenie.top/"
-languageCode = "zh-cd"
+locale = "zh-cn"
 defaultContentLanguage = "zh-cn"
 hasCJKLanguage = true
 title = "我的博客"
 theme = "PaperMod"
 mainsections = ["posts"]
 paginate = 10
+
+# 允许文章里直接写 HTML（例如 <iframe> 内嵌视频）；Hugo 默认会把原生 HTML 丢掉
+[markup.goldmark.renderer]
+unsafe = true
 
 # 开启页面功能
 ShowReadingTime = true
