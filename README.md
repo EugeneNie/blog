@@ -24,27 +24,58 @@ git push
 1. 推送到 `main` 分支（或手动触发）时自动开始；
 2. 检出代码，并拉取 `themes/PaperMod` 子模块（主题固定在同一版本，保证构建结果稳定）；
 3. 用 Hugo extended 0.166.0 执行 `hugo --minify --gc`，生成 `public/`；
-4. 把 `public/` 作为 Pages 产物上传，并发布到 GitHub Pages。
+4. 通过 SSH 连上阿里云服务器：先校验站点目录 → 把旧站点打包备份 → `rsync --delete` 把 `public/` 同步到网站根目录。
 
-本地预览、CI 构建用的是同一个 Hugo 大版本，结果一致。
+几个安全设计：
 
-## 首次配置（只需要做一次）
+- `rsync --delete` 会删掉网站根目录里多余的文件，但 `.well-known/` 被排除，不影响 HTTPS 证书续签；
+- 如果 `SSH_PATH` 指向的目录既没有 `index.html` 也不是空目录，流水线直接中止，避免误删别的目录；
+- 每次部署前会打包一份 `blog-backup-<时间戳>.tgz` 放在站点目录的上一级，保留最近 5 份。
 
-1. 在 GitHub 上新建一个仓库（建议 `blog`，或直接用 `<你的用户名>.github.io`）。
-2. 本地关联远程仓库并推送：
+本地预览和 CI 构建用的是同一个 Hugo 版本，结果一致。
 
-   ```powershell
-   git remote add origin https://github.com/<你的用户名>/<仓库名>.git
-   git push -u origin main
-   ```
+## 一次性配置
 
-3. 打开仓库 **Settings → Pages**，把 **Source** 选为 **GitHub Actions**。
-4. 自定义域名 `eugenenie.top`：
-   - **Settings → Pages → Custom domain** 填 `eugenenie.top`，保存并勾选 **Enforce HTTPS**；
-   - 在阿里云 DNS（`dns9.hichina.com` / `dns10.hichina.com`）添加解析：
-     - `A` 记录，主机记录 `@`，指向 `185.199.108.153`、`185.199.109.153`、`185.199.110.153`、`185.199.111.153`；
-     - `CNAME` 记录，主机记录 `www`，指向 `<你的用户名>.github.io`。
-   - 域名验证通过后会自动签发 HTTPS 证书，`static/CNAME` 里已经写好了域名。
+### 1. 服务器上授权部署公钥
+
+把本机 `C:\Users\kk\.ssh\blog-deploy-ed25519.pub` 的内容（一整行）追加到服务器的 `/root/.ssh/authorized_keys`。
+用宝塔面板的话，打开 **终端** 执行：
+
+```bash
+mkdir -p /root/.ssh && chmod 700 /root/.ssh
+echo "公钥内容粘贴到这里" >> /root/.ssh/authorized_keys
+chmod 600 /root/.ssh/authorized_keys
+```
+
+### 2. 仓库里配置 Secrets
+
+仓库 **Settings → Secrets and variables → Actions → New repository secret**，需要这几项：
+
+| 名称 | 值 |
+| --- | --- |
+| `SSH_HOST` | 服务器 IP，例如 `8.130.75.245` |
+| `SSH_PORT` | SSH 端口，默认 `22` |
+| `SSH_USER` | 登录用户，宝塔 CentOS 一般是 `root` |
+| `SSH_PATH` | 网站根目录，宝塔默认是 `/www/wwwroot/eugenenie.top` |
+| `SSH_PRIVATE_KEY` | 本机 `C:\Users\kk\.ssh\blog-deploy-ed25519` 的全部内容（含 BEGIN/END 两行） |
+
+配好之后改点东西 `git push`，或到 Actions 页面点 **Run workflow** 手动跑一次验证。
+
+### 3. 本地关联远程仓库（已完成）
+
+```powershell
+git remote add origin https://github.com/EugeneNie/blog.git
+git push -u origin main
+```
+
+## 出问题怎么回滚
+
+```bash
+cd /www/wwwroot/eugenenie.top
+tar xzf ../blog-backup-20260929-153000.tgz   # 换成实际备份文件名
+```
+
+备份在站点目录的上一级，`ls ../blog-backup-*.tgz` 可以看到全部。
 
 ## 常用命令
 
