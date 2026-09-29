@@ -32,6 +32,8 @@ git push
 - 如果 `SSH_PATH` 指向的目录既没有 `index.html` 也不是空目录，流水线直接中止，避免误删别的目录；
 - 每次部署前会打包一份 `blog-backup-<时间戳>.tgz` 放在站点目录的上一级，保留最近 5 份。
 
+服务器侧的前提条件（本机已配好，换机器时注意）：`rsync` 已安装（`dnf install -y rsync`）、`root` 已授权 `blog-ci-deploy` 公钥、宝塔站点属主是 `www:www`。
+
 本地预览和 CI 构建用的是同一个 Hugo 版本，结果一致。
 
 ## 一次性配置
