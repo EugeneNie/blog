@@ -95,7 +95,7 @@ jobs:
 
       - name: rsync 同步 public 到服务器
         run: |
-          rsync -rlptDz --delete --exclude '.well-known/' -e ssh ./public/ "blog-deploy:$SSH_PATH/"
+          rsync -rlptDz --delete --chown=www:www --exclude '.*' -e ssh ./public/ "blog-deploy:$SSH_PATH/"
 
       - name: 检查线上访问
         continue-on-error: true

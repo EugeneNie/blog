@@ -24,11 +24,11 @@ git push
 1. 推送到 `main` 分支（或手动触发）时自动开始；
 2. 检出代码，并拉取 `themes/PaperMod` 子模块（主题固定在同一版本，保证构建结果稳定）；
 3. 用 Hugo extended 0.166.0 执行 `hugo --minify --gc`，生成 `public/`；
-4. 通过 SSH 连上阿里云服务器：先校验站点目录 → 把旧站点打包备份 → `rsync --delete` 把 `public/` 同步到网站根目录。
+4. 通过 SSH 连上阿里云服务器：先校验站点目录 → 把旧站点打包备份 → `rsync --delete` 把 `public/` 同步到网站根目录（属主设为 `www:www`，和宝塔保持一致）。
 
 几个安全设计：
 
-- `rsync --delete` 会删掉网站根目录里多余的文件，但 `.well-known/` 被排除，不影响 HTTPS 证书续签；
+- `rsync --delete` 会删掉网站根目录里多余的文件，但以 `.` 开头的隐藏文件（`.well-known/`、`.user.ini` 等）都保留，不影响 HTTPS 证书续签和面板配置；
 - 如果 `SSH_PATH` 指向的目录既没有 `index.html` 也不是空目录，流水线直接中止，避免误删别的目录；
 - 每次部署前会打包一份 `blog-backup-<时间戳>.tgz` 放在站点目录的上一级，保留最近 5 份。
 
