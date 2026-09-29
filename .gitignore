@@ -1,0 +1,15 @@
+# Hugo 构建产物（由 CI 自动生成，不需要提交）
+public/
+resources/_gen/
+.hugo_build.lock
+
+# 本地保留但未使用的主题（dream / 解压出来的 PaperMod 副本）
+themes/dream/
+themes/hugo-PaperMod-master/
+
+# 编辑器与系统文件
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log

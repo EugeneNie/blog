@@ -1,0 +1,42 @@
+baseURL = "https://eugenenie.top/"
+languageCode = "zh-cd"
+defaultContentLanguage = "zh-cn"
+hasCJKLanguage = true
+title = "我的博客"
+theme = "PaperMod"
+mainsections = ["posts"]
+paginate = 10
+
+# 开启页面功能
+ShowReadingTime = true
+ShowPostNavLinks = true
+ShowBreadCrumbs = true
+ShowCodeCopyButtons = true
+ShowWordCount = true
+
+# 首页配置（卡片模式+个人信息侧边）
+[homeInfoParams]
+Title = "欢迎来到我的博客"
+Content = "记录学习笔记与日常"
+
+[params]
+  # 首页卡片网格模式，开启多列卡片
+  homeMode = "cards"
+  author = "你的名字"
+  avatar = "/images/avatar.png" #头像放到 static/images/avatar.png
+
+# 菜单
+[[menu.main]]
+name = "首页"
+url = "/"
+weight = 1
+
+[[menu.main]]
+name = "文章"
+url = "/posts/"
+weight = 2
+
+[[menu.main]]
+name = "关于"
+url = "/about/"
+weight = 3
