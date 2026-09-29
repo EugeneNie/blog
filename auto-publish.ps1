@@ -90,7 +90,19 @@ $msg = 'auto: 更新博客 ' + (Get-Date -Format 'yyyy-MM-dd HH:mm')
 $commitOut = & $git commit -q -m $msg 2>&1
 if ($LASTEXITCODE -ne 0) { Write-Log "提交失败：$commitOut"; return }
 
-$pushOut = & $git push 2>&1
-if ($LASTEXITCODE -ne 0) { Write-Log "推送失败（检查网络或 GitHub 凭据）：$pushOut"; return }
-
-Write-Log "已自动提交并推送：$msg"
+# Windows 自带 schannel 走代理时偶发握手失败，失败就换 OpenSSL 后端重试
+$attempts = @(
+    @{ label = '默认后端'; args = @() },
+    @{ label = 'OpenSSL 后端'; args = @('-c', 'http.sslBackend=openssl') },
+    @{ label = 'OpenSSL 后端'; args = @('-c', 'http.sslBackend=openssl') }
+)
+foreach ($a in $attempts) {
+    $pushOut = & $git @($a.args) push 2>&1
+    if ($LASTEXITCODE -eq 0) {
+        Write-Log "已自动提交并推送（$($a.label)）：$msg"
+        return
+    }
+    Write-Log "推送失败（$($a.label)）：$pushOut"
+    Start-Sleep -Seconds 5
+}
+Write-Log '推送连续失败，本次放弃，下次计划任务会再试'
