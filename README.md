@@ -25,6 +25,16 @@ git push
 
 自动发布的原理：Windows 计划任务 `BlogAutoPublish` 每 5 分钟运行一次 `auto-publish.ps1`，检测到博客有改动、且本地构建通过时，自动 `git commit + push`。带上这些保护：文件刚改过会再等一轮（避免提交写了一半的文章）、源文件超过 10MB 不自动提交、本地构建失败不推送。
 
+任务实际执行的命令是 `wscript.exe "D:\blog\auto-publish-hidden.vbs"`，由这个 VBS 启动器再以隐藏方式拉起 `auto-publish.ps1`。
+
+> **为什么要多一层 VBS 启动器？**
+> 计划任务是以「只在用户登录时运行」的方式配置的，直接调用 `powershell.exe` 时，Windows 会先在当前桌面会话里创建控制台窗口，`-WindowStyle Hidden` 要等 PowerShell 进程起来之后才生效，所以会看到黑框一闪而过（每 5 分钟一次）。
+> `wscript.exe` 属于 GUI 子系统程序，本身不会创建控制台窗口；由它以窗口样式 `0`（隐藏）去拉起 PowerShell，控制台窗口从创建那一刻就是隐藏的，不会再闪。
+>
+> **注意：`auto-publish-hidden.vbs` 必须保持纯 ASCII 内容。** Windows Script Host 按 ANSI（本机为 GBK）读取 `.vbs`，UTF-8 中文注释会被解码成乱码，甚至吃掉换行符，导致脚本静默失效（退出码 0 但什么都没做）。中文说明一律写在本 README 里。`auto-publish.ps1` 带 UTF-8 BOM，PowerShell 能正确识别，不受此限制。
+>
+> 想改回原来的直接调用方式，把计划任务的操作改回 `powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "D:\blog\auto-publish.ps1"` 即可（黑框会重新出现）。
+
 日志在 `%LOCALAPPDATA%\blog-auto-publish.log`；不想用自动发布了就执行：
 
 ```powershell
