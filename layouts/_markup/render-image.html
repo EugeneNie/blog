@@ -1,0 +1,34 @@
+{{- /* 覆盖主题的图片渲染钩子：把「本地磁盘路径」自动改写成网站路径。
+     例：![](D:\blog\static\images\a.png) 或 ![](D:/blog/static/images/a.png)
+        或 ![](../../static/images/a.png)  →  <img src="/images/a.png">
+     规则：只要路径是本地磁盘路径（盘符 / UNC / 含 static/images），就只取文件名，
+     拼成 /images/<文件名>。所以图片放进 D:\blog\static\images\ 即可，不用手工改路径。
+     其他写法（网络图片、/images/xxx.png、页面资源）行为与主题原本完全一致。 */ -}}
+{{- $dest := .Destination -}}
+{{- $src := "" -}}
+{{- if or (findRE `^[A-Za-z]:[\\/]` $dest) (hasPrefix $dest `\\`) (findRE `[\\/]static[\\/]images[\\/]` $dest) -}}
+  {{- $src = printf "/images/%s" (path.Base (replace $dest "\\" "/")) -}}
+{{- else -}}
+  {{- $u := urls.Parse $dest -}}
+  {{- $src = $u.String -}}
+  {{- if not $u.IsAbs -}}
+    {{- $path := strings.TrimPrefix "./" $u.Path }}
+    {{- with or (.PageInner.Resources.Get $path) (resources.Get $path) -}}
+      {{- $src = .RelPermalink -}}
+      {{- with $u.RawQuery -}}
+        {{- $src = printf "%s?%s" $src . -}}
+      {{- end -}}
+      {{- with $u.Fragment -}}
+        {{- $src = printf "%s#%s" $src . -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- $attributes := merge .Attributes (dict "alt" .Text "src" $src "title" (.Title | transform.HTMLEscape) "loading" "lazy") -}}
+<img
+  {{- range $k, $v := $attributes -}}
+    {{- if $v -}}
+      {{- printf " %s=%q" $k $v | safeHTMLAttr -}}
+    {{- end -}}
+  {{- end -}}>
+{{- /**/ -}}
