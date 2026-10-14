@@ -1,0 +1,30 @@
+{{- /* 图片路径兜底。
+
+     markdown 写法（![](D:\blog\static\images\a.png)）由 layouts/_markup/render-image.html
+     在构建时就改成 /images/a.png；但 Typora 粘贴图片时如果带上了显示尺寸，会写成
+     HTML 标签 <img src="D:\blog\static\images\a.png" style="zoom:25%"> —— HTML 不经过
+     markdown 渲染钩子，所以这里在页面加载后用一段脚本兜底，把本地磁盘路径改成
+     /images/<文件名>（对应 static/images/ 下的文件）。图片文件本身由 Typora 的
+     「复制图片到指定路径」自动放进 static/images/，所以只需要改地址。 */ -}}
+<script>
+    (function () {
+        // 本地磁盘路径（盘符开头 / UNC）或任何指向 static/images 的路径
+        var LOCAL = /^[a-zA-Z]:[\\/]|^\\\\|[\\/]static[\\/]images[\\/]/;
+        function fixImage(img) {
+            var src = img.getAttribute("src");
+            if (!src || !LOCAL.test(src)) return;
+            var name = src.replace(/\\/g, "/").split("/").pop();
+            if (name) img.setAttribute("src", "/images/" + encodeURIComponent(name));
+        }
+        function fixAll() {
+            var imgs = document.querySelectorAll("img");
+            for (var i = 0; i < imgs.length; i++) fixImage(imgs[i]);
+        }
+        fixAll();
+        // 图片在脚本执行完之后才报错的也要接住
+        document.addEventListener("error", function (e) {
+            if (e.target && e.target.tagName === "IMG") fixImage(e.target);
+        }, true);
+        document.addEventListener("DOMContentLoaded", fixAll);
+    })();
+</script>
