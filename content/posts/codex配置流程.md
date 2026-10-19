@@ -1,7 +1,7 @@
 +++
 date = '2026-09-29T22:26:51+08:00'
 draft = false
-title = '第三篇博客'
+title = 'codex配置流程'
 summary = '在 Codex 里接入 glm-5.3 系列模型的完整流程：下载 ChatGPT 客户端、创建 根目录/.codex/models.json、在 config.toml 里填好 API Key，重启 Codex 即可使用。'
 
 +++
